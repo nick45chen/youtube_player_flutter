@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -30,8 +32,7 @@ class YoutubePlayerBuilder extends StatefulWidget {
   _YoutubePlayerBuilderState createState() => _YoutubePlayerBuilderState();
 }
 
-class _YoutubePlayerBuilderState extends State<YoutubePlayerBuilder>
-    with WidgetsBindingObserver {
+class _YoutubePlayerBuilderState extends State<YoutubePlayerBuilder> with WidgetsBindingObserver {
   final GlobalKey playerKey = GlobalKey();
 
   @override
@@ -64,24 +65,26 @@ class _YoutubePlayerBuilderState extends State<YoutubePlayerBuilder>
 
   @override
   Widget build(BuildContext context) {
-    final _player = Container(
+    final landscapeBody = Container(
       key: playerKey,
-      child: WillPopScope(
-        onWillPop: () async {
-          final controller = widget.player.controller;
-          if (controller.value.isFullScreen) {
-            widget.player.controller.toggleFullScreenMode();
-            return false;
-          }
-          return true;
-        },
-        child: widget.player,
-      ),
+      child: Platform.isAndroid
+          ? WillPopScope(
+              onWillPop: () async {
+                final controller = widget.player.controller;
+                if (controller.value.isFullScreen) {
+                  widget.player.controller.toggleFullScreenMode();
+                  return false;
+                }
+                return true;
+              },
+              child: widget.player,
+            )
+          : widget.player,
     );
-    final child = widget.builder(context, _player);
+
+    final portraitBody = widget.builder(context, landscapeBody);
     return OrientationBuilder(
-      builder: (context, orientation) =>
-          orientation == Orientation.portrait ? child : _player,
+      builder: (context, orientation) => orientation == Orientation.portrait ? portraitBody : landscapeBody,
     );
   }
 }
